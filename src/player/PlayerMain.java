@@ -24,6 +24,11 @@ import player.model.StationListWrapper;
 import player.view.PlayerMainController;
 import player.view.RootLayoutController;
 
+
+import jouvieje.bass.BassInit;
+import jouvieje.bass.exceptions.BassException;
+import static jouvieje.bass.Bass.*;
+
 public class PlayerMain extends Application {
 
     private Stage primaryStage;
@@ -54,6 +59,7 @@ public class PlayerMain extends Application {
         this.primaryStage.setTitle("NetRadioPlayer");
         itializeRootLayout();
         showPlayerMain();
+        initBassNative();
     }
 
     private void itializeRootLayout() {
@@ -139,6 +145,7 @@ public class PlayerMain extends Application {
                 e.printStackTrace();
             }
         }
+        closeBassNative();
     }
 
     public void stop() { // in case app closed by closing window
@@ -182,4 +189,22 @@ public class PlayerMain extends Application {
         launch(args);
     }
 
+    void initBassNative() {
+        try {
+            BassInit.loadLibraries();
+        }
+        catch (BassException e) {
+            System.out.println("Failed to load Bass library, " + e.getMessage());
+            return;
+        }
+        if (BassInit.NATIVEBASS_LIBRARY_VERSION() != BassInit.NATIVEBASS_JAR_VERSION()) {
+            System.out.println("Library version does not match."); 
+            System.out.println("lib version: " + BassInit.NATIVEBASS_LIBRARY_VERSION());
+            System.out.println("JAR version: " + BassInit.NATIVEBASS_JAR_VERSION());
+            return;
+        }
+    }
+    void closeBassNative() {
+        BASS_Free();
+    }
 }
