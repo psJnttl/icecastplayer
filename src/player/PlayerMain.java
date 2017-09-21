@@ -23,6 +23,7 @@ public class PlayerMain extends Application {
     private ObservableList<RadioStation> stationList = FXCollections.observableArrayList();
     private String streamToFileName;
     private RandomAccessFile streamToRaf = null;
+    private PlayerMainController playerMainController;
 
     public PlayerMain() {
         stationList.add(new RadioStation("80splanet.com", "http://23.92.61.227:9020"));
@@ -72,9 +73,9 @@ public class PlayerMain extends Application {
             AnchorPane playerMainView = (AnchorPane) loader.load();
             rootLayout.setCenter(playerMainView);
 
-            PlayerMainController controller = loader.getController();
-            controller.setPlayerMain(this);
-            controller.setStationSelectList(stationList);
+            playerMainController = loader.getController();
+            playerMainController.setPlayerMain(this);
+            playerMainController.setStationSelectList(stationList);
         }
         catch (IOException e) {
             e.printStackTrace();
@@ -91,6 +92,7 @@ public class PlayerMain extends Application {
 
     public void playStream(RadioStation station) {
         if (null != station && !station.getStationUrl().isEmpty()) {
+            playerMainController.setDisableFileSelection(true);
             System.out.println("now Playing " + station.getName());
             try {
                 if (null != streamToRaf) {
@@ -116,6 +118,7 @@ public class PlayerMain extends Application {
         catch (IOException e) {
             e.printStackTrace();
         }
+        playerMainController.setDisableFileSelection(false);
     }
 
     public void shutDown() {

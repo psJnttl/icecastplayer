@@ -20,7 +20,7 @@
                   <Insets bottom="20.0" />
                </VBox.margin>
             </Button>
-            <Button mnemonicParsing="false" onAction="#handleSaveTo" prefWidth="90.0" text="Save to">
+            <Button fx:id="saveToButton" mnemonicParsing="false" onAction="#handleSaveTo" prefWidth="90.0" text="Save to">
                <VBox.margin>
                   <Insets bottom="40.0" />
                </VBox.margin>

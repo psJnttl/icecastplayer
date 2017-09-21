@@ -8,6 +8,7 @@ import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Alert.AlertType;
+import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.ListCell;
 import javafx.stage.FileChooser;
@@ -23,6 +24,8 @@ public class PlayerMainController {
     private ComboBox<RadioStation> stationSelect;
     private ObservableList<RadioStation> stationSelectList = FXCollections.observableArrayList();
     private RadioStation selectedStation;
+    @FXML 
+    private Button saveToButton;
     @FXML
     private TextField streamToFilenameField;
 
@@ -104,7 +107,6 @@ public class PlayerMainController {
         alert.setHeaderText("NetRadioPlayer");
         alert.setContentText("This button starts the stream.");
         alert.showAndWait();
-        streamToFilenameField.setDisable(true);
         playerMain.playStream(this.selectedStation);
     }
 
@@ -116,6 +118,10 @@ public class PlayerMainController {
         alert.setContentText("This button stops the stream.");
         alert.showAndWait();
         playerMain.stopStream();
-        streamToFilenameField.setDisable(false);
+    }
+    
+    public void setDisableFileSelection(boolean state) {
+        streamToFilenameField.setDisable(state);
+        saveToButton.setDisable(state);
     }
 }
