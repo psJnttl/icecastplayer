@@ -9,6 +9,7 @@ public class RadioStation {
     private StringProperty stationUrl;
 
     public RadioStation() {
+        this(null,null);  // needed for JAXB
     }
 
     public RadioStation(String name, String stationUrl) {

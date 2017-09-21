@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<radiostations>
+    <radiostation>
+        <name>80splanet.com</name>
+        <stationUrl>http://23.92.61.227:9020</stationUrl>
+    </radiostation>
+    <radiostation>
+        <name>ROCK ANTENNE Heavy Metal</name>
+        <stationUrl>http://mp3channels.webradio.antenne.de:80/heavy-metal</stationUrl>
+    </radiostation>
+    <radiostation>
+        <name>RADIO ENERGY (NRJ), 90s</name>
+        <stationUrl>http://stream.radioreklama.bg:80/nrj128</stationUrl>
+    </radiostation>
+    <radiostation>
+        <name>Breakz.FM - DJ Radio</name>
+        <stationUrl>http://radio2.breakz.fm:8000/stream128.mp3</stationUrl>
+    </radiostation>
+</radiostations>

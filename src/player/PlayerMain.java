@@ -4,15 +4,23 @@ import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Marshaller;
+import javax.xml.bind.Unmarshaller;
+
 import javafx.application.Application;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
 import player.model.RadioStation;
+import player.model.StationListWrapper;
 import player.view.PlayerMainController;
 import player.view.RootLayoutController;
 
@@ -135,6 +143,38 @@ public class PlayerMain extends Application {
 
     public void stop() { // in case app closed by closing window
         shutDown();
+    }
+
+    public void loadStationList(File file) {
+        System.out.println("station list file: " + file.getAbsolutePath());
+        try {
+            JAXBContext jaxbContext = JAXBContext.newInstance(StationListWrapper.class);
+            Unmarshaller unmarshaler = jaxbContext.createUnmarshaller();
+            StationListWrapper stationListWrapper = (StationListWrapper) unmarshaler.unmarshal(file);
+            stationList.clear();
+            stationList.addAll(stationListWrapper.getStationList());
+        }
+        catch (JAXBException e) {
+            Alert alert = new Alert(AlertType.ERROR);
+            alert.setTitle("ERROR");
+            alert.setHeaderText("Couldn't load stations from XML file.");
+            alert.setContentText(e.getCause().toString() + "\n" + e.getMessage());
+        }
+
+    }
+
+    public void saveStationList(File file) {
+        try {
+            JAXBContext jaxbContext = JAXBContext.newInstance(StationListWrapper.class);
+            Marshaller marshaler = jaxbContext.createMarshaller();
+            marshaler.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
+            StationListWrapper stationListWrapper = new StationListWrapper();
+            stationListWrapper.setStationList(stationList);
+            marshaler.marshal(stationListWrapper, file);
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     public static void main(String[] args) {

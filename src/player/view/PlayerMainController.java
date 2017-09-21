@@ -91,7 +91,13 @@ public class PlayerMainController {
 
     @FXML
     private void handleStreamFrom() {
-
+        FileChooser fileChooser = new FileChooser();
+        FileChooser.ExtensionFilter xmlFilter = new FileChooser.ExtensionFilter("XML files (*.xml)", "*.xml");
+        fileChooser.getExtensionFilters().add(xmlFilter);
+        File file = fileChooser.showOpenDialog(playerMain.getPrimaryStage());
+        if (null != file) {
+            playerMain.loadStationList(file);
+        }
     }
 
     @FXML
