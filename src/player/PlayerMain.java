@@ -153,6 +153,7 @@ public class PlayerMain extends Application {
             StationListWrapper stationListWrapper = (StationListWrapper) unmarshaler.unmarshal(file);
             stationList.clear();
             stationList.addAll(stationListWrapper.getStationList());
+            playerMainController.setStationSelectList(stationList);
         }
         catch (JAXBException e) {
             Alert alert = new Alert(AlertType.ERROR);
