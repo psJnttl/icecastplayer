@@ -15,6 +15,7 @@ public class RootLayoutController {
     
     @FXML
     private void handleExit() {
+        playerMain.shutDown();
         System.exit(0);
     }
     

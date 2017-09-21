@@ -1,6 +1,8 @@
 package player;
 
+import java.io.File;
 import java.io.IOException;
+import java.io.RandomAccessFile;
 
 import javafx.application.Application;
 import javafx.collections.FXCollections;
@@ -11,6 +13,7 @@ import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
 import player.model.RadioStation;
+import player.view.PlayerMainController;
 import player.view.RootLayoutController;
 
 public class PlayerMain extends Application {
@@ -18,6 +21,7 @@ public class PlayerMain extends Application {
     private Stage primaryStage;
     private BorderPane rootLayout;
     private ObservableList<RadioStation> stationList = FXCollections.observableArrayList();
+    private RandomAccessFile streamToRaf = null;
 
     public PlayerMain() {
         stationList.add(new RadioStation("80splanet.com", "http://23.92.61.227:9020"));
@@ -49,10 +53,10 @@ public class PlayerMain extends Application {
             rootLayout = (BorderPane) loader.load();
             Scene scene = new Scene(rootLayout);
             primaryStage.setScene(scene);
-            
+
             RootLayoutController controller = loader.getController();
             controller.setPlayerMain(this);
-            
+
             primaryStage.show();
         }
         catch (IOException e) {
@@ -63,17 +67,49 @@ public class PlayerMain extends Application {
     private void showPlayerMain() {
         try {
             FXMLLoader loader = new FXMLLoader();
-            loader.setLocation(PlayerMain.class.getResource("view/PlayerMain.fxml"));
+            loader.setLocation(PlayerMain.class.getResource("view/PlayerMainLayout.fxml"));
             AnchorPane playerMainView = (AnchorPane) loader.load();
             rootLayout.setCenter(playerMainView);
+
+            PlayerMainController controller = loader.getController();
+            controller.setPlayerMain(this);
         }
         catch (IOException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         }
+    }
+
+    public void setStreamToFile(File file) {
+        try {
+            if (null != streamToRaf) {
+                streamToRaf.close();
+            }
+            streamToRaf = new RandomAccessFile(file, "rw");
+            streamToRaf.writeBytes("mp3 or ogg");
+        }
+        catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void shutDown() {
+        System.out.println("shutDown()");
+        if (null != streamToRaf) {
+            try {
+                streamToRaf.close();
+            }
+            catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public void stop() { // in case app closed by closing window
+        shutDown();
     }
 
     public static void main(String[] args) {
         launch(args);
     }
+
 }
