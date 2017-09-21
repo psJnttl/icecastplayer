@@ -11,6 +11,7 @@ import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
 import player.model.RadioStation;
+import player.view.RootLayoutController;
 
 public class PlayerMain extends Application {
 
@@ -48,6 +49,10 @@ public class PlayerMain extends Application {
             rootLayout = (BorderPane) loader.load();
             Scene scene = new Scene(rootLayout);
             primaryStage.setScene(scene);
+            
+            RootLayoutController controller = loader.getController();
+            controller.setPlayerMain(this);
+            
             primaryStage.show();
         }
         catch (IOException e) {
