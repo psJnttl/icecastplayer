@@ -2,26 +2,77 @@ package player.view;
 
 import java.io.File;
 
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Alert.AlertType;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.ListCell;
 import javafx.stage.FileChooser;
+import javafx.util.StringConverter;
 import player.PlayerMain;
+import player.model.RadioStation;
 
 public class PlayerMainController {
 
     private PlayerMain playerMain;
 
     @FXML
+    private ComboBox<RadioStation> stationSelect;
+    private ObservableList<RadioStation> stationSelectList = FXCollections.observableArrayList();
+    private RadioStation selectedStation;
+    @FXML
     private TextField streamToFilenameField;
+
+    public void setStationSelectList(ObservableList<RadioStation> stationList) {
+        stationSelectList.clear();
+        stationSelectList.addAll(stationList);
+    }
+    
+    public void initialize() {
+        stationSelect.setItems(stationSelectList);
+        stationSelect.setCellFactory((select) -> {  // rendering options
+            return new ListCell<RadioStation>() {
+                protected void updateItem(RadioStation item, boolean empty) {
+                    super.updateItem(item, empty);
+                    if (null == item || empty) {
+                        setText(null);
+                    }
+                    else {
+                        setText(item.getName());
+                    }
+                }
+            };
+        });
+        stationSelect.setConverter(new StringConverter<RadioStation>() {
+            @Override
+            public String toString(RadioStation station) {
+                if (null != station) {
+                    return station.getName();
+                }
+                return null;
+            }
+            
+            @Override
+            public RadioStation fromString(String string) {
+                return null;
+            }
+        });
+        stationSelect.setOnAction((event) -> {
+            RadioStation station = stationSelect.getSelectionModel().getSelectedItem(); 
+            this.selectedStation = station;
+        });
+        
+    }
 
     public void setPlayerMain(PlayerMain playerMain) {
         this.playerMain = playerMain;
         streamToFilenameField.textProperty().addListener((observable, oldValue, newValue) -> {
             playerMain.setStreamToFile(newValue);
         });
-        
+
     }
 
     @FXML
@@ -54,7 +105,7 @@ public class PlayerMainController {
         alert.setContentText("This button starts the stream.");
         alert.showAndWait();
         streamToFilenameField.setDisable(true);
-        playerMain.playStream();
+        playerMain.playStream(this.selectedStation);
     }
 
     @FXML

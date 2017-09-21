@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 
 import javafx.application.Application;
-import javafx.beans.value.ObservableStringValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXMLLoader;
@@ -75,6 +74,7 @@ public class PlayerMain extends Application {
 
             PlayerMainController controller = loader.getController();
             controller.setPlayerMain(this);
+            controller.setStationSelectList(stationList);
         }
         catch (IOException e) {
             e.printStackTrace();
@@ -89,16 +89,21 @@ public class PlayerMain extends Application {
         this.streamToFileName = filename;
     }
 
-    public void playStream() {
-        try {
-            if (null != streamToRaf) {
-                streamToRaf.close();
+    public void playStream(RadioStation station) {
+        if (null != station && !station.getStationUrl().isEmpty()) {
+            System.out.println("now Playing " + station.getName());
+            try {
+                if (null != streamToRaf) {
+                    streamToRaf.close();
+                }
+                if (null != streamToFileName && !streamToFileName.isEmpty()) {
+                    streamToRaf = new RandomAccessFile(this.streamToFileName, "rw");
+                    streamToRaf.writeBytes("mp3 or ogg");
+                }
             }
-            streamToRaf = new RandomAccessFile(this.streamToFileName, "rw");
-            streamToRaf.writeBytes("mp3 or ogg");
-        }
-        catch (IOException e) {
-            e.printStackTrace();
+            catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 
