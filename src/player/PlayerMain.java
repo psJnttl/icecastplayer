@@ -90,10 +90,10 @@ public class PlayerMain extends Application {
         this.streamToFileName = filename;
     }
 
-    public void playStream(RadioStation station) {
-        if (null != station && !station.getStationUrl().isEmpty()) {
+    public void playStream(String stationUrl) {
+        if (null != stationUrl && !stationUrl.isEmpty()) {
             playerMainController.setDisableFileSelection(true);
-            System.out.println("now Playing " + station.getName());
+            System.out.println("now Playing " + stationUrl);
             try {
                 if (null != streamToRaf) {
                     streamToRaf.close();

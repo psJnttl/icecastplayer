@@ -24,8 +24,10 @@ public class PlayerMainController {
     private ComboBox<RadioStation> stationSelect;
     private ObservableList<RadioStation> stationSelectList = FXCollections.observableArrayList();
     private RadioStation selectedStation;
-    @FXML 
+    @FXML
     private Button saveToButton;
+    @FXML
+    private TextField streamUrlField;
     @FXML
     private TextField streamToFilenameField;
 
@@ -33,10 +35,10 @@ public class PlayerMainController {
         stationSelectList.clear();
         stationSelectList.addAll(stationList);
     }
-    
+
     public void initialize() {
         stationSelect.setItems(stationSelectList);
-        stationSelect.setCellFactory((select) -> {  // rendering options
+        stationSelect.setCellFactory((select) -> { // rendering options
             return new ListCell<RadioStation>() {
                 protected void updateItem(RadioStation item, boolean empty) {
                     super.updateItem(item, empty);
@@ -57,17 +59,18 @@ public class PlayerMainController {
                 }
                 return null;
             }
-            
+
             @Override
             public RadioStation fromString(String string) {
                 return null;
             }
         });
         stationSelect.setOnAction((event) -> {
-            RadioStation station = stationSelect.getSelectionModel().getSelectedItem(); 
+            RadioStation station = stationSelect.getSelectionModel().getSelectedItem();
             this.selectedStation = station;
+            this.streamUrlField.setText(station.getStationUrl());
         });
-        
+
     }
 
     public void setPlayerMain(PlayerMain playerMain) {
@@ -75,7 +78,15 @@ public class PlayerMainController {
         streamToFilenameField.textProperty().addListener((observable, oldValue, newValue) -> {
             playerMain.setStreamToFile(newValue);
         });
-
+        streamUrlField.textProperty().addListener((observable, oldValue, newValue) -> {
+            System.out.println("StreamUrl: " + newValue);
+            if (null != selectedStation) {
+                selectedStation.setStationUrl(newValue);
+            }
+            else {
+                selectedStation = new RadioStation("manual", newValue);
+            }
+        });
     }
 
     @FXML
@@ -107,7 +118,7 @@ public class PlayerMainController {
         alert.setHeaderText("NetRadioPlayer");
         alert.setContentText("This button starts the stream.");
         alert.showAndWait();
-        playerMain.playStream(this.selectedStation);
+        playerMain.playStream(this.selectedStation.getStationUrl());
     }
 
     @FXML
@@ -119,7 +130,7 @@ public class PlayerMainController {
         alert.showAndWait();
         playerMain.stopStream();
     }
-    
+
     public void setDisableFileSelection(boolean state) {
         streamToFilenameField.setDisable(state);
         saveToButton.setDisable(state);
