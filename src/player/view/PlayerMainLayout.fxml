@@ -54,7 +54,7 @@
       </HBox>
       <HBox layoutX="130.0" layoutY="64.0" prefHeight="25.0">
          <children>
-            <TextField prefWidth="465.0" />
+            <TextField fx:id="streamToFilenameField" prefWidth="465.0" />
          </children>
       </HBox>
       <Label layoutX="130.0" layoutY="97.0" text="Message from server" />

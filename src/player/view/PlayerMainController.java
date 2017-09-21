@@ -4,6 +4,7 @@ import java.io.File;
 
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
+import javafx.scene.control.TextField;
 import javafx.scene.control.Alert.AlertType;
 import javafx.stage.FileChooser;
 import player.PlayerMain;
@@ -12,8 +13,20 @@ public class PlayerMainController {
 
     private PlayerMain playerMain;
 
+    @FXML
+    private TextField streamToFilenameField;
+
     public void setPlayerMain(PlayerMain playerMain) {
         this.playerMain = playerMain;
+        streamToFilenameField.textProperty().addListener((observable, oldValue, newValue) -> {
+            playerMain.setStreamToFile(newValue);
+        });
+        
+    }
+
+    @FXML
+    private void handleStreamFrom() {
+
     }
 
     @FXML
@@ -28,6 +41,7 @@ public class PlayerMainController {
         File file = fileChooser.showSaveDialog(playerMain.getPrimaryStage());
 
         if (null != file) {
+            streamToFilenameField.setText(file.getAbsolutePath());
             playerMain.setStreamToFile(file);
         }
     }
@@ -39,6 +53,8 @@ public class PlayerMainController {
         alert.setHeaderText("NetRadioPlayer");
         alert.setContentText("This button starts the stream.");
         alert.showAndWait();
+        streamToFilenameField.setDisable(true);
+        playerMain.playStream();
     }
 
     @FXML
@@ -48,5 +64,7 @@ public class PlayerMainController {
         alert.setHeaderText("NetRadioPlayer");
         alert.setContentText("This button stops the stream.");
         alert.showAndWait();
+        playerMain.stopStream();
+        streamToFilenameField.setDisable(false);
     }
 }
