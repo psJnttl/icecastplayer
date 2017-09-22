@@ -2,7 +2,6 @@ package player;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.Optional;
@@ -39,6 +38,7 @@ import jouvieje.bass.structures.HSTREAM;
 import jouvieje.bass.structures.HSYNC;
 import jouvieje.bass.utils.Pointer;
 import player.util.Device;
+import player.util.StreamFile;
 
 import static jouvieje.bass.defines.BASS_STREAM.BASS_STREAM_BLOCK;
 import static jouvieje.bass.defines.BASS_STREAM.BASS_STREAM_STATUS;
@@ -66,11 +66,11 @@ public class PlayerMain extends Application {
     private BorderPane rootLayout;
     private ObservableList<RadioStation> stationList = FXCollections.observableArrayList();
     private String streamToFileName;
-    private RandomAccessFile streamToRaf = null;
     private PlayerMainController playerMainController;
     private Thread streamingThread = null;
     private HSTREAM chan = null;
     private boolean muteState = false;
+    private StreamFile streamFile = null;
 
     public PlayerMain() {
         stationList.add(new RadioStation("80splanet.com", "http://23.92.61.227:9020"));
@@ -143,12 +143,12 @@ public class PlayerMain extends Application {
             playerMainController.setDisableFileSelection(true);
             System.out.println("now Playing " + stationUrl);
             try {
-                if (null != streamToRaf) {
-                    streamToRaf.close();
+                if (null != streamFile) {
+                    streamFile.closeStreamFile();
+                    streamFile = null;
                 }
                 if (null != streamToFileName && !streamToFileName.isEmpty()) {
-                    streamToRaf = new RandomAccessFile(this.streamToFileName, "rw");
-                    streamToRaf.writeBytes("mp3 or ogg");
+                    streamFile = StreamFile.openStreamFile(streamToFileName);
                 }
                 openStreamUrl(stationUrl);
             }
@@ -161,8 +161,9 @@ public class PlayerMain extends Application {
 
     public void stopStream() {
         try {
-            if (null != streamToRaf) {
-                streamToRaf.close();
+            if (null != streamFile) {
+                streamFile.closeStreamFile();
+                streamFile = null;
             }
         }
         catch (IOException e) {
@@ -174,9 +175,10 @@ public class PlayerMain extends Application {
 
     public void shutDown() {
         System.out.println("shutDown()");
-        if (null != streamToRaf) {
+        if (null != streamFile) {
             try {
-                streamToRaf.close();
+                streamFile.closeStreamFile();
+                streamFile = null;
             }
             catch (IOException e) {
                 e.printStackTrace();
@@ -334,7 +336,14 @@ public class PlayerMain extends Application {
     private DOWNLOADPROC statusProc = new DOWNLOADPROC() {
         @Override
         public void DOWNLOADPROC(ByteBuffer buffer, int length, Pointer user) {
-
+            if (buffer != null && length > 0 && null != streamFile) {
+                try {
+                    streamFile.writeStreamData(buffer, length);
+                }
+                catch (IOException ex) {
+                    System.out.println("ooops, cannot write buffer to disk!");
+                }
+            }
         }
     };
 
@@ -362,7 +371,17 @@ public class PlayerMain extends Application {
                         .map(m -> m.replace("StreamTitle=", "")).map(m -> m.replace("'", "")).findFirst();
                 if (nowPlaying.isPresent()) {
                     System.out.println(nowPlaying.get());
-                    playerMainController.writeTitle(nowPlaying.get());
+                    playerMainController.updateTitle(nowPlaying.get());
+                    if (null != streamFile) {
+                        try {
+                            streamFile.writeMetaData(nowPlaying.get());
+                        }
+                        catch (IOException e) {
+                            // TODO Alert dialog: "Error writing to meta data
+                            // file"
+                            e.printStackTrace();
+                        }
+                    }
                 }
             }
         }
@@ -395,7 +414,17 @@ public class PlayerMain extends Application {
                         streamMeta = title;
                     }
                     System.out.println(streamMeta);
-                    playerMainController.writeTitle(streamMeta);
+                    playerMainController.updateTitle(streamMeta);
+                    if (null != streamFile) {
+                        try {
+                            streamFile.writeMetaData(streamMeta);
+                        }
+                        catch (IOException e) {
+                            // TODO Alert dialog: "Error writing to meta data
+                            // file"
+                            e.printStackTrace();
+                        }
+                    }
                 }
             }
         }
@@ -416,6 +445,5 @@ public class PlayerMain extends Application {
         else {
             BASS_ChannelSetAttribute(channel, BASS_ATTRIB_VOL, 1);
         }
-
     }
 }

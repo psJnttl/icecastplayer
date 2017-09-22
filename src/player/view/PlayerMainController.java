@@ -2,6 +2,7 @@ package player.view;
 
 import java.io.File;
 
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -143,16 +144,21 @@ public class PlayerMainController {
         boolean mute = muteCheckBox.isSelected();
         playerMain.setMute(mute);
     }
-    
-    public void writeTitle(String text) {
-        if (null != text) {
 
-            this.streamTitle.setText(text);
+    public void updateTitle(String text) {
+        if (null != text) {
+            Platform.runLater(() -> {
+                this.streamTitle.setText(text);
+            });
         }
     }
+
     public void updateStationId(String text) {
         if (null != text) {
-            this.stationId.setText(text);
+            Platform.runLater(() -> {
+                this.stationId.setText(text);
+            });
+
         }
     }
 }
