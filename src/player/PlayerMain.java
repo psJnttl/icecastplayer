@@ -91,6 +91,7 @@ public class PlayerMain extends Application {
     public void start(Stage primaryStage) {
         this.primaryStage = primaryStage;
         this.primaryStage.setTitle("NetRadioPlayer");
+        this.primaryStage.setResizable(false);
         itializeRootLayout();
         showPlayerMain();
         initBassNative();
@@ -170,7 +171,10 @@ public class PlayerMain extends Application {
             e.printStackTrace();
         }
         playerMainController.setDisableFileSelection(false);
-        BASS_ChannelStop(chan.asInt());
+        if (null != chan) {
+            BASS_ChannelStop(chan.asInt());
+            chan = null;
+        }
     }
 
     public void shutDown() {
