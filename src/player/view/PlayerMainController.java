@@ -1,6 +1,7 @@
 package player.view;
 
 import java.io.File;
+import java.util.prefs.Preferences;
 
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
@@ -38,6 +39,9 @@ public class PlayerMainController {
     private Label streamTitle;
     @FXML
     private Label stationId;
+    private Preferences preferences;
+    private static final String XML_DIR = "xmlDir";
+    private static final String STREAM_DIR = "streamDir";
 
     public void setStationSelectList(ObservableList<RadioStation> stationList) {
         stationSelectList.clear();
@@ -45,6 +49,7 @@ public class PlayerMainController {
     }
 
     public void initialize() {
+        preferences = Preferences.userNodeForPackage(PlayerMainController.class);
         stationSelect.setItems(stationSelectList);
         stationSelect.setCellFactory((select) -> { // rendering options
             return new ListCell<RadioStation>() {
@@ -102,9 +107,16 @@ public class PlayerMainController {
         FileChooser fileChooser = new FileChooser();
         FileChooser.ExtensionFilter xmlFilter = new FileChooser.ExtensionFilter("XML files (*.xml)", "*.xml");
         fileChooser.getExtensionFilters().add(xmlFilter);
+        String stationDir = preferences.get(XML_DIR, "");
+        if (!stationDir.isEmpty()) {
+            fileChooser.setInitialDirectory(new File(stationDir));
+        }
         File file = fileChooser.showOpenDialog(playerMain.getPrimaryStage());
         if (null != file) {
             playerMain.loadStationList(file);
+            stationDir = file.getAbsolutePath();
+            stationDir = stationDir.substring(0, stationDir.lastIndexOf("\\"));
+            preferences.put(XML_DIR, stationDir);
         }
     }
 
@@ -117,11 +129,18 @@ public class PlayerMainController {
         fileChooser.getExtensionFilters().add(mp3Filter);
         fileChooser.getExtensionFilters().add(oggFilter);
         fileChooser.getExtensionFilters().add(allFilter);
+        String streamDir = preferences.get(STREAM_DIR, "");
+        if (!streamDir.isEmpty()) {
+            fileChooser.setInitialDirectory(new File(streamDir));
+        }
         File file = fileChooser.showSaveDialog(playerMain.getPrimaryStage());
 
         if (null != file) {
             streamToFilenameField.setText(file.getAbsolutePath());
             playerMain.setStreamToFile(file);
+            streamDir = file.getAbsolutePath();
+            streamDir = streamDir.substring(0, streamDir.lastIndexOf("\\"));
+            preferences.put(STREAM_DIR, streamDir);
         }
     }
 
