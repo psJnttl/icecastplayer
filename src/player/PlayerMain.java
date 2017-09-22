@@ -169,6 +169,7 @@ public class PlayerMain extends Application {
             e.printStackTrace();
         }
         playerMainController.setDisableFileSelection(false);
+        BASS_ChannelStop(chan.asInt());
     }
 
     public void shutDown() {

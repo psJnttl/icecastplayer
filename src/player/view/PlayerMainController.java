@@ -5,9 +5,7 @@ import java.io.File;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
-import javafx.scene.control.Alert;
 import javafx.scene.control.TextField;
-import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.ListCell;
@@ -119,21 +117,11 @@ public class PlayerMainController {
 
     @FXML
     private void handlePlay() {
-        Alert alert = new Alert(AlertType.INFORMATION);
-        alert.setTitle("Play stream");
-        alert.setHeaderText("NetRadioPlayer");
-        alert.setContentText("This button starts the stream.");
-        alert.showAndWait();
         playerMain.playStream(this.selectedStation.getStationUrl());
     }
 
     @FXML
     private void handleStop() {
-        Alert alert = new Alert(AlertType.INFORMATION);
-        alert.setTitle("Stop stream");
-        alert.setHeaderText("NetRadioPlayer");
-        alert.setContentText("This button stops the stream.");
-        alert.showAndWait();
         playerMain.stopStream();
     }
 
