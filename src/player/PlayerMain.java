@@ -37,6 +37,7 @@ import jouvieje.bass.exceptions.BassException;
 import jouvieje.bass.structures.HSTREAM;
 import jouvieje.bass.structures.HSYNC;
 import jouvieje.bass.utils.Pointer;
+import player.util.AlertDialog;
 import player.util.Device;
 import player.util.StreamFile;
 
@@ -281,6 +282,11 @@ public class PlayerMain extends Application {
                         BASS_STREAM_BLOCK | BASS_STREAM_STATUS | BASS_STREAM_AUTOFREE, statusProc, null);
                 if (null == chan) {
                     System.out.println("Failed to play stream: " + stationUrl);
+                    AlertDialog alertDialg = new AlertDialog.Builder()
+                            .header("Failed to start stream")
+                            .content("Please check the stream URL.")
+                            .build();
+                    playerMainController.showAlertDialog(alertDialg);
                 }
                 else {
                     streamBufferTimer.play();

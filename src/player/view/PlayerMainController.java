@@ -16,6 +16,7 @@ import javafx.stage.FileChooser;
 import javafx.util.StringConverter;
 import player.PlayerMain;
 import player.model.RadioStation;
+import player.util.AlertDialog;
 
 public class PlayerMainController {
 
@@ -161,6 +162,14 @@ public class PlayerMainController {
                 this.stationId.setText(text);
             });
 
+        }
+    }
+
+    public void showAlertDialog(AlertDialog dialog) {
+        if (null != dialog) {
+            Platform.runLater(() -> {
+                dialog.show();
+            });
         }
     }
 }
