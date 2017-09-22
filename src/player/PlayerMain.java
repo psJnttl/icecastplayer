@@ -3,15 +3,19 @@ package player;
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
-
+import java.nio.ByteBuffer;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
 import javafx.application.Application;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
@@ -19,15 +23,40 @@ import javafx.scene.control.Alert.AlertType;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
+import javafx.util.Duration;
 import player.model.RadioStation;
 import player.model.StationListWrapper;
 import player.view.PlayerMainController;
 import player.view.RootLayoutController;
 
-
+import static jouvieje.bass.Bass.*;
 import jouvieje.bass.BassInit;
 import jouvieje.bass.exceptions.BassException;
-import static jouvieje.bass.Bass.*;
+import jouvieje.bass.structures.HSTREAM;
+import jouvieje.bass.structures.HSYNC;
+import jouvieje.bass.utils.Pointer;
+import player.util.Device;
+
+import static jouvieje.bass.defines.BASS_STREAM.BASS_STREAM_BLOCK;
+import static jouvieje.bass.defines.BASS_STREAM.BASS_STREAM_STATUS;
+import static jouvieje.bass.defines.BASS_STREAM.BASS_STREAM_AUTOFREE;
+import jouvieje.bass.callbacks.DOWNLOADPROC;
+import jouvieje.bass.callbacks.SYNCPROC;
+
+import static jouvieje.bass.defines.BASS_FILEPOS.BASS_FILEPOS_BUFFER;
+import static jouvieje.bass.defines.BASS_FILEPOS.BASS_FILEPOS_END;
+import static jouvieje.bass.defines.BASS_FILEPOS.BASS_FILEPOS_CONNECTED;
+import static jouvieje.bass.defines.BASS_TAG.BASS_TAG_HTTP;
+import static jouvieje.bass.defines.BASS_TAG.BASS_TAG_ICY;
+import static jouvieje.bass.defines.BASS_TAG.BASS_TAG_META;
+import static jouvieje.bass.defines.BASS_TAG.BASS_TAG_OGG;
+import static jouvieje.bass.defines.BASS_SYNC.BASS_SYNC_META;
+import static jouvieje.bass.defines.BASS_SYNC.BASS_SYNC_OGG_CHANGE;
+import static jouvieje.bass.defines.BASS_SYNC.BASS_SYNC_END;
+import static jouvieje.bass.defines.BASS_CONFIG.BASS_CONFIG_NET_PLAYLIST;
+import static jouvieje.bass.defines.BASS_CONFIG.BASS_CONFIG_NET_PREBUF;
+import static jouvieje.bass.defines.BASS_CONFIG.BASS_CONFIG_NET_BUFFER;
+import static jouvieje.bass.defines.BASS_CONFIG_NET.BASS_CONFIG_NET_PROXY;
 
 public class PlayerMain extends Application {
 
@@ -37,6 +66,8 @@ public class PlayerMain extends Application {
     private String streamToFileName;
     private RandomAccessFile streamToRaf = null;
     private PlayerMainController playerMainController;
+    private Thread streamingThread = null;
+    private HSTREAM chan = null;
 
     public PlayerMain() {
         stationList.add(new RadioStation("80splanet.com", "http://23.92.61.227:9020"));
@@ -116,10 +147,12 @@ public class PlayerMain extends Application {
                     streamToRaf = new RandomAccessFile(this.streamToFileName, "rw");
                     streamToRaf.writeBytes("mp3 or ogg");
                 }
+                openStreamUrl(stationUrl);
             }
             catch (IOException e) {
                 e.printStackTrace();
             }
+
         }
     }
 
@@ -168,7 +201,6 @@ public class PlayerMain extends Application {
             alert.setHeaderText("Couldn't load stations from XML file.");
             alert.setContentText(e.getCause().toString() + "\n" + e.getMessage());
         }
-
     }
 
     public void saveStationList(File file) {
@@ -189,7 +221,7 @@ public class PlayerMain extends Application {
         launch(args);
     }
 
-    void initBassNative() {
+    private void initBassNative() {
         try {
             BassInit.loadLibraries();
         }
@@ -198,13 +230,117 @@ public class PlayerMain extends Application {
             return;
         }
         if (BassInit.NATIVEBASS_LIBRARY_VERSION() != BassInit.NATIVEBASS_JAR_VERSION()) {
-            System.out.println("Library version does not match."); 
+            System.out.println("Library version does not match.");
             System.out.println("lib version: " + BassInit.NATIVEBASS_LIBRARY_VERSION());
             System.out.println("JAR version: " + BassInit.NATIVEBASS_JAR_VERSION());
             return;
         }
+        if (((BASS_GetVersion() & 0xFFFF0000) >> 16) != BassInit.BASSVERSION()) {
+            System.out.println("An incorrect version of BASS.DLL was loaded");
+            return;
+        }
+        if (!BASS_Init(Device.forceNoSoundDevice(-1), Device.forceFrequency(44100), 0, null, null)) {
+            System.out.println("Can't initialize device");
+            shutDown();
+        }
+        BASS_SetConfig(BASS_CONFIG_NET_PLAYLIST, 0);    // Disable PLS, M3U playlist. Future option bookmark.
+        BASS_SetConfig(BASS_CONFIG_NET_PREBUF, 0);      // enable buffering status display by setting automatic buffering to minimum
+        BASS_SetConfigPtr(BASS_CONFIG_NET_PROXY, null);
     }
-    void closeBassNative() {
+
+    private void closeBassNative() {
         BASS_Free();
     }
+
+    private void openStreamUrl(String stationUrl) {
+        if (null != streamingThread) {
+            System.out.println("Thread already running");
+            return;
+        }
+        streamingThread = new Thread() {
+            public synchronized void start() {
+                System.out.println("Starting streaming thread");
+                streamBufferTimer.stop();
+                BASS_StreamFree(chan);
+                chan = BASS_StreamCreateURL(stationUrl, 0, BASS_STREAM_BLOCK | BASS_STREAM_STATUS | BASS_STREAM_AUTOFREE,
+                        statusProc, null);
+                if (null == chan) {
+                    System.out.println("Failed to play stream: " + stationUrl);
+                }
+                else {
+                    streamBufferTimer.play();
+                }
+                streamingThread = null;
+            }
+        };
+        streamingThread.start();
+    }
+
+    private Timeline streamBufferTimer = new Timeline(
+            new KeyFrame(Duration.millis(50), new EventHandler<ActionEvent>() {
+
+                @Override
+                public void handle(ActionEvent event) {
+                    int progress = (int) (BASS_StreamGetFilePosition(chan, BASS_FILEPOS_BUFFER) * 100
+                            / BASS_StreamGetFilePosition(chan, BASS_FILEPOS_END));
+                    if (progress > 75 || BASS_StreamGetFilePosition(chan, BASS_FILEPOS_CONNECTED) != 0) {
+                        streamBufferTimer.stop();
+                        Pointer tags = BASS_ChannelGetTags(chan.asInt(), BASS_TAG_ICY);
+                        if (null == tags) {
+                            tags = BASS_ChannelGetTags(chan.asInt(), BASS_TAG_HTTP);
+                        }
+                        if (null != tags) {
+                            int length;
+                            while ((length = tags.asString().length()) > 0) {
+                                final String ICY_NAME = "icy-name:";
+                                final String ICY_URL = "icy-br:";
+
+                                String tag = tags.asString();
+                                if (tag.toLowerCase().startsWith(ICY_NAME)) {
+                                    // set message from station, ICY name to
+                                    // widget
+                                }
+                                if (tag.toLowerCase().startsWith(ICY_URL)) {
+                                    // set message from station, URL to widget
+                                }
+                                tags = tags.asPointer(length + 1);
+                            }
+                        }
+                        else {
+                            // clear  message from station
+                        }
+                    }
+                    else {
+                        System.out.print("progress: " + progress + " %");
+                    }
+                    // getMetadata();
+                    BASS_ChannelSetSync(chan.asInt(), BASS_SYNC_META, 0, metaSync, null);
+                    BASS_ChannelSetSync(chan.asInt(), BASS_SYNC_OGG_CHANGE, 0, metaSync, null);
+                    BASS_ChannelSetSync(chan.asInt(), BASS_SYNC_END, 0, endSync, null);
+                    BASS_ChannelPlay(chan.asInt(), false);
+                }
+
+            }));
+
+    private DOWNLOADPROC statusProc = new DOWNLOADPROC() {
+        @Override
+        public void DOWNLOADPROC(ByteBuffer buffer, int length, Pointer user) {
+
+        }
+    };
+    
+    private SYNCPROC metaSync = new SYNCPROC() {
+        @Override
+        public void SYNCPROC(HSYNC handle, int channel, int data, Pointer user) {
+//            getMetadata();
+        }
+    };
+
+    private SYNCPROC endSync = new SYNCPROC() {
+        @Override
+        public void SYNCPROC(HSYNC handle, int channel, int data, Pointer user) {
+            // update to message from station: stream stopped
+        }
+    };
+
 }
