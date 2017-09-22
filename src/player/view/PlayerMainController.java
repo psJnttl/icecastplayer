@@ -126,7 +126,9 @@ public class PlayerMainController {
 
     @FXML
     private void handlePlay() {
-        playerMain.playStream(this.selectedStation.getStationUrl());
+        if (null != selectedStation) {
+            playerMain.playStream(selectedStation.getStationUrl());
+        }
     }
 
     @FXML
