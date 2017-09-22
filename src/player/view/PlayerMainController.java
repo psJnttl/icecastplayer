@@ -7,6 +7,7 @@ import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.ListCell;
 import javafx.stage.FileChooser;
@@ -28,6 +29,8 @@ public class PlayerMainController {
     private TextField streamUrlField;
     @FXML
     private TextField streamToFilenameField;
+    @FXML
+    private CheckBox muteCheckBox;
 
     public void setStationSelectList(ObservableList<RadioStation> stationList) {
         stationSelectList.clear();
@@ -128,5 +131,11 @@ public class PlayerMainController {
     public void setDisableFileSelection(boolean state) {
         streamToFilenameField.setDisable(state);
         saveToButton.setDisable(state);
+    }
+
+    @FXML
+    private void handleMute() {
+        boolean mute = muteCheckBox.isSelected();
+        playerMain.setMute(mute);
     }
 }

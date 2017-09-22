@@ -45,7 +45,6 @@ import static jouvieje.bass.defines.BASS_STREAM.BASS_STREAM_STATUS;
 import static jouvieje.bass.defines.BASS_STREAM.BASS_STREAM_AUTOFREE;
 import jouvieje.bass.callbacks.DOWNLOADPROC;
 import jouvieje.bass.callbacks.SYNCPROC;
-
 import static jouvieje.bass.defines.BASS_FILEPOS.BASS_FILEPOS_BUFFER;
 import static jouvieje.bass.defines.BASS_FILEPOS.BASS_FILEPOS_END;
 import static jouvieje.bass.defines.BASS_FILEPOS.BASS_FILEPOS_CONNECTED;
@@ -58,8 +57,8 @@ import static jouvieje.bass.defines.BASS_SYNC.BASS_SYNC_OGG_CHANGE;
 import static jouvieje.bass.defines.BASS_SYNC.BASS_SYNC_END;
 import static jouvieje.bass.defines.BASS_CONFIG.BASS_CONFIG_NET_PLAYLIST;
 import static jouvieje.bass.defines.BASS_CONFIG.BASS_CONFIG_NET_PREBUF;
-import static jouvieje.bass.defines.BASS_CONFIG.BASS_CONFIG_NET_BUFFER;
 import static jouvieje.bass.defines.BASS_CONFIG_NET.BASS_CONFIG_NET_PROXY;
+import static jouvieje.bass.defines.BASS_ATTRIB.BASS_ATTRIB_VOL;
 
 public class PlayerMain extends Application {
 
@@ -71,6 +70,7 @@ public class PlayerMain extends Application {
     private PlayerMainController playerMainController;
     private Thread streamingThread = null;
     private HSTREAM chan = null;
+    private boolean muteState = false;
 
     public PlayerMain() {
         stationList.add(new RadioStation("80splanet.com", "http://23.92.61.227:9020"));
@@ -327,6 +327,7 @@ public class PlayerMain extends Application {
                     BASS_ChannelSetSync(chan.asInt(), BASS_SYNC_OGG_CHANGE, 0, metaSync, null);
                     BASS_ChannelSetSync(chan.asInt(), BASS_SYNC_END, 0, endSync, null);
                     BASS_ChannelPlay(chan.asInt(), false);
+                    setChannelMute(chan.asInt(), muteState);
                 }
 
             }));
@@ -390,12 +391,30 @@ public class PlayerMain extends Application {
                     if (!artist.isEmpty() && !title.isEmpty()) {
                         streamMeta += artist + " - " + title;
                     }
-                    else if(!title.isEmpty()) {
+                    else if (!title.isEmpty()) {
                         streamMeta = title;
                     }
                     System.out.println(streamMeta);
                 }
             }
         }
+    }
+
+    public void setMute(boolean muteState) {
+        this.muteState = muteState;
+        if (null != chan) {
+            setChannelMute(chan.asInt(), muteState);
+        }
+    }
+
+    private void setChannelMute(int channel, boolean state) {
+        if (state) {
+
+            BASS_ChannelSetAttribute(channel, BASS_ATTRIB_VOL, 0);
+        }
+        else {
+            BASS_ChannelSetAttribute(channel, BASS_ATTRIB_VOL, 1);
+        }
+
     }
 }
