@@ -302,15 +302,14 @@ public class PlayerMain extends Application {
                             int length;
                             while ((length = tags.asString().length()) > 0) {
                                 final String ICY_NAME = "icy-name:";
-                                final String ICY_URL = "icy-br:";
+                                final String ICY_BR = "icy-br:";
 
                                 String tag = tags.asString();
                                 if (tag.toLowerCase().startsWith(ICY_NAME)) {
-                                    // set message from station, ICY name to
-                                    // widget
+                                    playerMainController.updateStationId(tag.substring(ICY_NAME.length()));
                                 }
-                                if (tag.toLowerCase().startsWith(ICY_URL)) {
-                                    // set message from station, URL to widget
+                                if (tag.toLowerCase().startsWith(ICY_BR)) {
+                                    // to bitrate indicator
                                 }
                                 tags = tags.asPointer(length + 1);
                             }
@@ -363,6 +362,7 @@ public class PlayerMain extends Application {
                         .map(m -> m.replace("StreamTitle=", "")).map(m -> m.replace("'", "")).findFirst();
                 if (nowPlaying.isPresent()) {
                     System.out.println(nowPlaying.get());
+                    playerMainController.writeTitle(nowPlaying.get());
                 }
             }
         }
@@ -395,6 +395,7 @@ public class PlayerMain extends Application {
                         streamMeta = title;
                     }
                     System.out.println(streamMeta);
+                    playerMainController.writeTitle(streamMeta);
                 }
             }
         }

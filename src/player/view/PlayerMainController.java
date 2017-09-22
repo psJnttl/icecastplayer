@@ -9,6 +9,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
+import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.stage.FileChooser;
 import javafx.util.StringConverter;
@@ -31,6 +32,10 @@ public class PlayerMainController {
     private TextField streamToFilenameField;
     @FXML
     private CheckBox muteCheckBox;
+    @FXML
+    private Label streamTitle;
+    @FXML
+    private Label stationId;
 
     public void setStationSelectList(ObservableList<RadioStation> stationList) {
         stationSelectList.clear();
@@ -137,5 +142,17 @@ public class PlayerMainController {
     private void handleMute() {
         boolean mute = muteCheckBox.isSelected();
         playerMain.setMute(mute);
+    }
+    
+    public void writeTitle(String text) {
+        if (null != text) {
+
+            this.streamTitle.setText(text);
+        }
+    }
+    public void updateStationId(String text) {
+        if (null != text) {
+            this.stationId.setText(text);
+        }
     }
 }
