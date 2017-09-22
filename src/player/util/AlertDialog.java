@@ -13,7 +13,7 @@ public class AlertDialog {
         private AlertType alertType = AlertType.ERROR;
         private String title = "Error";
         private String header = "Generic error";
-        private String content = "Some undefined event occurred.";
+        private String content = "";
 
         public Builder alertType(AlertType alertType) {
             this.alertType = alertType;

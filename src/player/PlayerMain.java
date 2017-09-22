@@ -112,7 +112,11 @@ public class PlayerMain extends Application {
             primaryStage.show();
         }
         catch (IOException e) {
-            e.printStackTrace();
+            AlertDialog alertDialog = new AlertDialog.Builder()
+                    .header(e.getMessage())
+                    .content("Failed to load object hierarchy from FXML")
+                    .build();
+            playerMainController.showAlertDialog(alertDialog);
         }
     }
 
@@ -128,7 +132,11 @@ public class PlayerMain extends Application {
             playerMainController.setStationSelectList(stationList);
         }
         catch (IOException e) {
-            e.printStackTrace();
+            AlertDialog alertDialog = new AlertDialog.Builder()
+                    .header(e.getMessage())
+                    .content("Failed to load object hierarchy from FXML")
+                    .build();
+            playerMainController.showAlertDialog(alertDialog);
         }
     }
 
@@ -155,9 +163,12 @@ public class PlayerMain extends Application {
                 openStreamUrl(stationUrl);
             }
             catch (IOException e) {
-                e.printStackTrace();
+                AlertDialog alertDialog = new AlertDialog.Builder()
+                        .header(e.getMessage())
+                        .build();
+                playerMainController.showAlertDialog(alertDialog);
+                stopStream();
             }
-
         }
     }
 
@@ -169,7 +180,10 @@ public class PlayerMain extends Application {
             }
         }
         catch (IOException e) {
-            e.printStackTrace();
+            AlertDialog alertDialog = new AlertDialog.Builder()
+                    .header(e.getMessage())
+                    .build();
+            playerMainController.showAlertDialog(alertDialog);
         }
         playerMainController.setDisableFileSelection(false);
         if (null != chan) {
@@ -186,7 +200,10 @@ public class PlayerMain extends Application {
                 streamFile = null;
             }
             catch (IOException e) {
-                e.printStackTrace();
+                AlertDialog alertDialog = new AlertDialog.Builder()
+                        .header(e.getMessage())
+                        .build();
+                playerMainController.showAlertDialog(alertDialog);
             }
         }
         closeBassNative();
@@ -207,10 +224,11 @@ public class PlayerMain extends Application {
             playerMainController.setStationSelectList(stationList);
         }
         catch (JAXBException e) {
-            Alert alert = new Alert(AlertType.ERROR);
-            alert.setTitle("ERROR");
-            alert.setHeaderText("Couldn't load stations from XML file.");
-            alert.setContentText(e.getCause().toString() + "\n" + e.getMessage());
+            AlertDialog alertDialog = new AlertDialog.Builder()
+                    .header("Couldn't load stations from XML file.")
+                    .content(e.getCause().toString() + "\n" + e.getMessage())
+                    .build();
+            playerMainController.showAlertDialog(alertDialog);
         }
     }
 
@@ -224,7 +242,11 @@ public class PlayerMain extends Application {
             marshaler.marshal(stationListWrapper, file);
         }
         catch (Exception e) {
-            e.printStackTrace();
+            AlertDialog alertDialog = new AlertDialog.Builder()
+                    .header("Failed to save stations to an XML file.")
+                    .content(e.getCause().toString() + "\n" + e.getMessage())
+                    .build();
+            playerMainController.showAlertDialog(alertDialog);
         }
     }
 
@@ -237,21 +259,36 @@ public class PlayerMain extends Application {
             BassInit.loadLibraries();
         }
         catch (BassException e) {
-            System.out.println("Failed to load Bass library, " + e.getMessage());
+            AlertDialog alertDialog = new AlertDialog.Builder()
+                    .header("Failed to load Bass library")
+                    .content(e.getMessage())
+                    .build();
+            playerMainController.showAlertDialog(alertDialog);
             return;
         }
         if (BassInit.NATIVEBASS_LIBRARY_VERSION() != BassInit.NATIVEBASS_JAR_VERSION()) {
-            System.out.println("Library version does not match.");
-            System.out.println("lib version: " + BassInit.NATIVEBASS_LIBRARY_VERSION());
-            System.out.println("JAR version: " + BassInit.NATIVEBASS_JAR_VERSION());
+            AlertDialog alertDialog = new AlertDialog.Builder()
+                    .header("Library version does not match.")
+                    .content("lib version: " + BassInit.NATIVEBASS_LIBRARY_VERSION() + "\n" + 
+                             "JAR version: " + BassInit.NATIVEBASS_JAR_VERSION())
+                    .build();
+            playerMainController.showAlertDialog(alertDialog);
             return;
         }
         if (((BASS_GetVersion() & 0xFFFF0000) >> 16) != BassInit.BASSVERSION()) {
-            System.out.println("An incorrect version of BASS.DLL was loaded");
+            AlertDialog alertDialog = new AlertDialog.Builder()
+                    .header("An incorrect version of BASS.DLL was loaded.")
+                    .content("Should be: " + ((BASS_GetVersion() & 0xFFFF0000) >> 16) + "\n" + 
+                             "lib version: " + BassInit.BASSVERSION())
+                    .build();
+            playerMainController.showAlertDialog(alertDialog);
             return;
         }
         if (!BASS_Init(Device.forceNoSoundDevice(-1), Device.forceFrequency(44100), 0, null, null)) {
-            System.out.println("Can't initialize device");
+            AlertDialog alertDialog = new AlertDialog.Builder()
+                    .header("Can't initialize device.")
+                    .build();
+            playerMainController.showAlertDialog(alertDialog);
             shutDown();
         }
         BASS_SetConfig(BASS_CONFIG_NET_PLAYLIST, 0); // Disable PLS, M3U
@@ -265,7 +302,9 @@ public class PlayerMain extends Application {
     }
 
     private void closeBassNative() {
-        BASS_Free();
+        if (BassInit.isLibrariesLoaded()) {
+            BASS_Free();
+        }
     }
 
     private void openStreamUrl(String stationUrl) {
@@ -352,6 +391,11 @@ public class PlayerMain extends Application {
                 }
                 catch (IOException ex) {
                     System.out.println("ooops, cannot write buffer to disk!");
+                    AlertDialog alertDialg = new AlertDialog.Builder()
+                            .content("Can't write stream buffer to file!")
+                            .header(ex.getMessage())
+                            .build();
+                    playerMainController.showAlertDialog(alertDialg);
                 }
             }
         }
@@ -387,9 +431,11 @@ public class PlayerMain extends Application {
                             streamFile.writeMetaData(nowPlaying.get());
                         }
                         catch (IOException e) {
-                            // TODO Alert dialog: "Error writing to meta data
-                            // file"
-                            e.printStackTrace();
+                            AlertDialog alertDialg = new AlertDialog.Builder()
+                                    .content("Can't write stream meta data to file!")
+                                    .header(e.getMessage())
+                                    .build();
+                            playerMainController.showAlertDialog(alertDialg);
                         }
                     }
                 }
@@ -430,9 +476,11 @@ public class PlayerMain extends Application {
                             streamFile.writeMetaData(streamMeta);
                         }
                         catch (IOException e) {
-                            // TODO Alert dialog: "Error writing to meta data
-                            // file"
-                            e.printStackTrace();
+                            AlertDialog alertDialg = new AlertDialog.Builder()
+                                    .content("Can't write stream meta data to file!")
+                                    .header(e.getMessage())
+                                    .build();
+                            playerMainController.showAlertDialog(alertDialg);
                         }
                     }
                 }
