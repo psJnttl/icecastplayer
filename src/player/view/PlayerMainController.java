@@ -44,6 +44,8 @@ public class PlayerMainController {
     private static final String STREAM_DIR = "streamDir";
 
     public void setStationSelectList(ObservableList<RadioStation> stationList) {
+        stationSelect.getSelectionModel().clearSelection();
+        this.streamUrlField.setText("");
         stationSelectList.clear();
         stationSelectList.addAll(stationList);
     }
@@ -81,7 +83,9 @@ public class PlayerMainController {
         stationSelect.setOnAction((event) -> {
             RadioStation station = stationSelect.getSelectionModel().getSelectedItem();
             this.selectedStation = station;
-            this.streamUrlField.setText(station.getStationUrl());
+            if (null != station) {
+                this.streamUrlField.setText(station.getStationUrl());
+            }
         });
 
     }
