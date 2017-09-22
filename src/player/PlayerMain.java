@@ -4,6 +4,9 @@ import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
+import java.util.Arrays;
+import java.util.Optional;
+
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
@@ -243,8 +246,13 @@ public class PlayerMain extends Application {
             System.out.println("Can't initialize device");
             shutDown();
         }
-        BASS_SetConfig(BASS_CONFIG_NET_PLAYLIST, 0);    // Disable PLS, M3U playlist. Future option bookmark.
-        BASS_SetConfig(BASS_CONFIG_NET_PREBUF, 0);      // enable buffering status display by setting automatic buffering to minimum
+        BASS_SetConfig(BASS_CONFIG_NET_PLAYLIST, 0); // Disable PLS, M3U
+                                                     // playlist. Future option
+                                                     // bookmark.
+        BASS_SetConfig(BASS_CONFIG_NET_PREBUF, 0); // enable buffering status
+                                                   // display by setting
+                                                   // automatic buffering to
+                                                   // minimum
         BASS_SetConfigPtr(BASS_CONFIG_NET_PROXY, null);
     }
 
@@ -262,8 +270,8 @@ public class PlayerMain extends Application {
                 System.out.println("Starting streaming thread");
                 streamBufferTimer.stop();
                 BASS_StreamFree(chan);
-                chan = BASS_StreamCreateURL(stationUrl, 0, BASS_STREAM_BLOCK | BASS_STREAM_STATUS | BASS_STREAM_AUTOFREE,
-                        statusProc, null);
+                chan = BASS_StreamCreateURL(stationUrl, 0,
+                        BASS_STREAM_BLOCK | BASS_STREAM_STATUS | BASS_STREAM_AUTOFREE, statusProc, null);
                 if (null == chan) {
                     System.out.println("Failed to play stream: " + stationUrl);
                 }
@@ -307,13 +315,13 @@ public class PlayerMain extends Application {
                             }
                         }
                         else {
-                            // clear  message from station
+                            // clear message from station
                         }
                     }
                     else {
                         System.out.print("progress: " + progress + " %");
                     }
-                    // getMetadata();
+                    getMetadata();
                     BASS_ChannelSetSync(chan.asInt(), BASS_SYNC_META, 0, metaSync, null);
                     BASS_ChannelSetSync(chan.asInt(), BASS_SYNC_OGG_CHANGE, 0, metaSync, null);
                     BASS_ChannelSetSync(chan.asInt(), BASS_SYNC_END, 0, endSync, null);
@@ -328,11 +336,11 @@ public class PlayerMain extends Application {
 
         }
     };
-    
+
     private SYNCPROC metaSync = new SYNCPROC() {
         @Override
         public void SYNCPROC(HSYNC handle, int channel, int data, Pointer user) {
-//            getMetadata();
+            getMetadata();
         }
     };
 
@@ -343,4 +351,50 @@ public class PlayerMain extends Application {
         }
     };
 
+    private void getMetadata() {
+        Pointer metaData = BASS_ChannelGetTags(chan.asInt(), BASS_TAG_META);
+        if (metaData != null) { // StreamTitle='xxx';StreamUrl='xxx';
+            String meta = metaData.asString();
+            if (null != meta) {
+                String[] strings = meta.split(";");
+                Optional<String> nowPlaying = Arrays.asList(strings).stream().filter(m -> m.startsWith("StreamTitle="))
+                        .map(m -> m.replace("StreamTitle=", "")).map(m -> m.replace("'", "")).findFirst();
+                if (nowPlaying.isPresent()) {
+                    System.out.println(nowPlaying.get());
+                }
+            }
+        }
+        else {
+            metaData = BASS_ChannelGetTags(chan.asInt(), BASS_TAG_OGG);
+            if (null != metaData) {
+                String artist = "", title = "";
+                String meta = metaData.asString();
+                if (null != meta) {
+                    while (metaData.asString().length() > 0) {
+                        String str = metaData.asString();
+                        if (null != str) {
+                            if (str.toLowerCase().startsWith("artist=")) {
+                                artist = str.substring(7);
+                            }
+                            else if (str.toLowerCase().startsWith("title=")) {
+                                title = str.substring(6);
+                            }
+                        }
+                        else {
+                            break;
+                        }
+                        metaData = metaData.asPointer(metaData.asString().length() + 1);
+                    }
+                    String streamMeta = "";
+                    if (!artist.isEmpty() && !title.isEmpty()) {
+                        streamMeta += artist + " - " + title;
+                    }
+                    else if(!title.isEmpty()) {
+                        streamMeta = title;
+                    }
+                    System.out.println(streamMeta);
+                }
+            }
+        }
+    }
 }
