@@ -14,6 +14,7 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.stage.FileChooser;
+import javafx.stage.Stage;
 import javafx.util.StringConverter;
 import player.PlayerMain;
 import player.model.RadioStation;
@@ -185,6 +186,15 @@ public class PlayerMainController {
                 this.stationId.setText(text);
             });
 
+        }
+    }
+    
+    public void updateAppTitle(String title) {
+        Stage stage = playerMain.getPrimaryStage();
+        if (null != stage && null != title && !title.isEmpty()) {
+            Platform.runLater( () -> {
+            stage.setTitle(title);
+            });
         }
     }
 

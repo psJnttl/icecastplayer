@@ -91,7 +91,7 @@ public class PlayerMain extends Application {
     @Override
     public void start(Stage primaryStage) {
         this.primaryStage = primaryStage;
-        this.primaryStage.setTitle("NetRadioPlayer");
+        this.primaryStage.setTitle("icecastplayer");
         this.primaryStage.setResizable(false);
         itializeRootLayout();
         showPlayerMain();
@@ -173,6 +173,7 @@ public class PlayerMain extends Application {
     }
 
     public void stopStream() {
+        this.primaryStage.setTitle("icecastplayer");
         try {
             if (null != streamFile) {
                 streamFile.closeStreamFile();
@@ -426,6 +427,7 @@ public class PlayerMain extends Application {
                 if (nowPlaying.isPresent()) {
                     System.out.println(nowPlaying.get());
                     playerMainController.updateTitle(nowPlaying.get());
+                    playerMainController.updateAppTitle(nowPlaying.get());
                     if (null != streamFile) {
                         try {
                             streamFile.writeMetaData(nowPlaying.get());
@@ -471,6 +473,7 @@ public class PlayerMain extends Application {
                     }
                     System.out.println(streamMeta);
                     playerMainController.updateTitle(streamMeta);
+                    playerMainController.updateAppTitle(streamMeta);
                     if (null != streamFile) {
                         try {
                             streamFile.writeMetaData(streamMeta);
