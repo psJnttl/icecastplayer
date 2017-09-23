@@ -74,6 +74,8 @@ public class PlayerMain extends Application {
     private HSTREAM chan = null;
     private boolean muteState = false;
     private StreamFile streamFile = null;
+    private static final String DRAG_OK_STYLE = "-fx-border-color: green; -fx-border-style: dashed; -fx-border-width: 3";
+    private static final String DRAG_FAIL_STYLE = "-fx-border-color: red; -fx-border-style: dashed; -fx-border-width: 3";
 
     public PlayerMain() {
         stationList.add(new RadioStation("80splanet.com", "http://23.92.61.227:9020"));
@@ -128,7 +130,7 @@ public class PlayerMain extends Application {
             loader.setLocation(PlayerMain.class.getResource("view/PlayerMainLayout.fxml"));
             AnchorPane playerMainView = (AnchorPane) loader.load();
             rootLayout.setCenter(playerMainView);
-            setupDragDrop(playerMainView);
+            setupDragDrop(rootLayout);
             playerMainController = loader.getController();
             playerMainController.setPlayerMain(this);
             playerMainController.setStationSelectList(stationList);
@@ -143,6 +145,7 @@ public class PlayerMain extends Application {
     }
     
     private void setupDragDrop(Pane view) {
+        String styleBackup = view.getStyle();
         view.setOnDragOver(new EventHandler<DragEvent>() {
 
             @Override
@@ -154,6 +157,10 @@ public class PlayerMain extends Application {
                     .findFirst();
                 if (filename.isPresent()) {
                     event.acceptTransferModes(TransferMode.COPY);
+                    view.setStyle(DRAG_OK_STYLE);
+                }
+                else {
+                    view.setStyle(DRAG_FAIL_STYLE);
                 }
                 event.consume();
             }
@@ -162,20 +169,27 @@ public class PlayerMain extends Application {
 
             @Override
             public void handle(DragEvent event) {
-                System.out.println("Dropped!");
                 boolean status = false;
                 Dragboard dragBoard = event.getDragboard();
                 Optional<File> xmlFile = dragBoard.getFiles().stream()
                     .filter(p -> p.getAbsolutePath().toLowerCase().endsWith(".xml"))
                     .findFirst();
                 if (xmlFile.isPresent()) {
-                    System.out.println(xmlFile.get().getAbsolutePath());
                     loadStationList(xmlFile.get());
                     status = true;
                 }
+                view.setStyle(styleBackup);
                 event.setDropCompleted(status);
                 event.consume();
             }
+        });
+        view.setOnDragExited(new EventHandler<DragEvent> () {
+
+            @Override
+            public void handle(DragEvent event) {
+                view.setStyle(styleBackup);
+                event.consume();
+            } 
         });
         
     }
