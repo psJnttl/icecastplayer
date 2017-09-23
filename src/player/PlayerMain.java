@@ -20,10 +20,12 @@ import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Alert.AlertType;
+import javafx.scene.input.DragEvent;
+import javafx.scene.input.Dragboard;
+import javafx.scene.input.TransferMode;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.Pane;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 import player.model.RadioStation;
@@ -126,7 +128,7 @@ public class PlayerMain extends Application {
             loader.setLocation(PlayerMain.class.getResource("view/PlayerMainLayout.fxml"));
             AnchorPane playerMainView = (AnchorPane) loader.load();
             rootLayout.setCenter(playerMainView);
-
+            setupDragDrop(playerMainView);
             playerMainController = loader.getController();
             playerMainController.setPlayerMain(this);
             playerMainController.setStationSelectList(stationList);
@@ -138,6 +140,44 @@ public class PlayerMain extends Application {
                     .build();
             playerMainController.showAlertDialog(alertDialog);
         }
+    }
+    
+    private void setupDragDrop(Pane view) {
+        view.setOnDragOver(new EventHandler<DragEvent>() {
+
+            @Override
+            public void handle(DragEvent event) {
+                Dragboard dragBoard = event.getDragboard();
+                Optional<String> filename  = dragBoard.getFiles().stream()
+                    .filter(f -> f.getName().toLowerCase().endsWith(".xml"))
+                    .map(f -> f.getAbsolutePath())
+                    .findFirst();
+                if (filename.isPresent()) {
+                    event.acceptTransferModes(TransferMode.COPY);
+                }
+                event.consume();
+            }
+        });
+        view.setOnDragDropped(new EventHandler<DragEvent>() {
+
+            @Override
+            public void handle(DragEvent event) {
+                System.out.println("Dropped!");
+                boolean status = false;
+                Dragboard dragBoard = event.getDragboard();
+                Optional<File> xmlFile = dragBoard.getFiles().stream()
+                    .filter(p -> p.getAbsolutePath().toLowerCase().endsWith(".xml"))
+                    .findFirst();
+                if (xmlFile.isPresent()) {
+                    System.out.println(xmlFile.get().getAbsolutePath());
+                    loadStationList(xmlFile.get());
+                    status = true;
+                }
+                event.setDropCompleted(status);
+                event.consume();
+            }
+        });
+        
     }
 
     public void setStreamToFile(File file) {
