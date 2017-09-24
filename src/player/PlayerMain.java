@@ -14,6 +14,7 @@ import javax.xml.bind.Unmarshaller;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
@@ -280,8 +281,9 @@ public class PlayerMain extends Application {
         }
         catch (JAXBException e) {
             AlertDialog alertDialog = new AlertDialog.Builder()
-                    .header("Couldn't load stations from XML file.")
-                    .content(e.getCause().toString() + "\n" + e.getMessage())
+                    .header("Couldn't load station list from XML file.\n" + 
+                            file.getAbsolutePath())
+                    .content(e.getMessage())
                     .build();
             playerMainController.showAlertDialog(alertDialog);
         }
