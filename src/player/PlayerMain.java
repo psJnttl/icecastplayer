@@ -1,6 +1,8 @@
 package player;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
@@ -271,19 +273,41 @@ public class PlayerMain extends Application {
 
     public void loadStationList(File file) {
         System.out.println("station list file: " + file.getAbsolutePath());
-        try {
-            JAXBContext jaxbContext = JAXBContext.newInstance(StationListWrapper.class);
-            Unmarshaller unmarshaler = jaxbContext.createUnmarshaller();
-            StationListWrapper stationListWrapper = (StationListWrapper) unmarshaler.unmarshal(file);
-            stationList.clear();
-            stationList.addAll(stationListWrapper.getStationList());
-            playerMainController.setStationSelectList(stationList);
+        try (FileInputStream fileStream = new FileInputStream(file)) { 
+            try {
+                JAXBContext jaxbContext = JAXBContext.newInstance(StationListWrapper.class);
+                Unmarshaller unmarshaler = jaxbContext.createUnmarshaller();
+                StationListWrapper stationListWrapper = (StationListWrapper) unmarshaler.unmarshal(fileStream);
+                stationList.clear();
+                stationList.addAll(stationListWrapper.getStationList());
+                playerMainController.setStationSelectList(stationList);
+            }
+            catch (JAXBException e) {
+                String message = e.getMessage();
+                String b = e.toString();
+                if (null != e.getLinkedException()) {
+                    message = e.getLinkedException().getMessage();
+                }
+                AlertDialog alertDialog = new AlertDialog.Builder()
+                        .header("Couldn't load station list from XML file.\n" + 
+                                file.getAbsolutePath())
+                        .content(message)
+                        .build();
+                playerMainController.showAlertDialog(alertDialog);
+            }
         }
-        catch (JAXBException e) {
+        catch (FileNotFoundException e1) {
             AlertDialog alertDialog = new AlertDialog.Builder()
-                    .header("Couldn't load station list from XML file.\n" + 
-                            file.getAbsolutePath())
-                    .content(e.getMessage())
+                    .header("File not found!\n" + file.getAbsolutePath() )
+                    .content(e1.getMessage())
+                    .build();
+            playerMainController.showAlertDialog(alertDialog);
+
+
+        }
+        catch (IOException e1) {
+            AlertDialog alertDialog = new AlertDialog.Builder()
+                    .header("Can't open file!\n" + file.getAbsolutePath())
                     .build();
             playerMainController.showAlertDialog(alertDialog);
         }
