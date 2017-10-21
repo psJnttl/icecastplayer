@@ -97,7 +97,6 @@ public class PlayerMainController {
             playerMain.setStreamToFile(newValue);
         });
         streamUrlField.textProperty().addListener((observable, oldValue, newValue) -> {
-            System.out.println("StreamUrl: " + newValue);
             if (null != selectedStation) {
                 selectedStation.setStationUrl(newValue);
             }

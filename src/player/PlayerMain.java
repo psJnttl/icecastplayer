@@ -16,7 +16,6 @@ import javax.xml.bind.Unmarshaller;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.application.Application;
-import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
@@ -208,7 +207,6 @@ public class PlayerMain extends Application {
     public void playStream(String stationUrl) {
         if (null != stationUrl && !stationUrl.isEmpty()) {
             playerMainController.setDisableFileSelection(true);
-            System.out.println("now Playing " + stationUrl);
             try {
                 if (null != streamFile) {
                     streamFile.closeStreamFile();
@@ -251,7 +249,6 @@ public class PlayerMain extends Application {
     }
 
     public void shutDown() {
-        System.out.println("shutDown()");
         if (null != streamFile) {
             try {
                 streamFile.closeStreamFile();
@@ -272,7 +269,6 @@ public class PlayerMain extends Application {
     }
 
     public void loadStationList(File file) {
-        System.out.println("station list file: " + file.getAbsolutePath());
         try (FileInputStream fileStream = new FileInputStream(file)) { 
             try {
                 JAXBContext jaxbContext = JAXBContext.newInstance(StationListWrapper.class);
@@ -390,18 +386,15 @@ public class PlayerMain extends Application {
 
     private void openStreamUrl(String stationUrl) {
         if (null != streamingThread) {
-            System.out.println("Thread already running");
             return;
         }
         streamingThread = new Thread() {
             public synchronized void start() {
-                System.out.println("Starting streaming thread");
                 streamBufferTimer.stop();
                 BASS_StreamFree(chan);
                 chan = BASS_StreamCreateURL(stationUrl, 0,
                         BASS_STREAM_BLOCK | BASS_STREAM_STATUS | BASS_STREAM_AUTOFREE, statusProc, null);
                 if (null == chan) {
-                    System.out.println("Failed to play stream: " + stationUrl);
                     AlertDialog alertDialg = new AlertDialog.Builder()
                             .header("Failed to start stream")
                             .content("Please check the stream URL.")
@@ -450,9 +443,6 @@ public class PlayerMain extends Application {
                             // clear message from station
                         }
                     }
-                    else {
-                        System.out.print("progress: " + progress + " %");
-                    }
                     getMetadata();
                     BASS_ChannelSetSync(chan.asInt(), BASS_SYNC_META, 0, metaSync, null);
                     BASS_ChannelSetSync(chan.asInt(), BASS_SYNC_OGG_CHANGE, 0, metaSync, null);
@@ -471,7 +461,6 @@ public class PlayerMain extends Application {
                     streamFile.writeStreamData(buffer, length);
                 }
                 catch (IOException ex) {
-                    System.out.println("ooops, cannot write buffer to disk!");
                     AlertDialog alertDialg = new AlertDialog.Builder()
                             .content("Can't write stream buffer to file!")
                             .header(ex.getMessage())
@@ -505,7 +494,6 @@ public class PlayerMain extends Application {
                 Optional<String> nowPlaying = Arrays.asList(strings).stream().filter(m -> m.startsWith("StreamTitle="))
                         .map(m -> m.replace("StreamTitle=", "")).map(m -> m.replace("'", "")).findFirst();
                 if (nowPlaying.isPresent()) {
-                    System.out.println(nowPlaying.get());
                     playerMainController.updateTitle(nowPlaying.get());
                     playerMainController.updateAppTitle(nowPlaying.get());
                     if (null != streamFile) {
@@ -551,7 +539,6 @@ public class PlayerMain extends Application {
                     else if (!title.isEmpty()) {
                         streamMeta = title;
                     }
-                    System.out.println(streamMeta);
                     playerMainController.updateTitle(streamMeta);
                     playerMainController.updateAppTitle(streamMeta);
                     if (null != streamFile) {
