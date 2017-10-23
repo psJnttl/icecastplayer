@@ -22,6 +22,7 @@ import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
+import javafx.scene.image.Image;
 import javafx.scene.input.DragEvent;
 import javafx.scene.input.Dragboard;
 import javafx.scene.input.TransferMode;
@@ -99,6 +100,7 @@ public class PlayerMain extends Application {
         this.primaryStage = primaryStage;
         this.primaryStage.setTitle("icecastplayer");
         this.primaryStage.setResizable(false);
+        this.primaryStage.getIcons().add(new Image("file:resources/images/if_92-Music_2123892_32x32.png"));
         itializeRootLayout();
         showPlayerMain();
         initBassNative();
